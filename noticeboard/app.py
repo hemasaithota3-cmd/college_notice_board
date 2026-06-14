@@ -833,6 +833,10 @@ def onesignal_worker():
 def onesignal_updater():
     return send_from_directory('static', 'OneSignalSDKUpdaterWorker.js',
                                mimetype='application/javascript')
+
+@socketio.on("send_message")
+def handle_message(data):
+    emit("receive_message", data, broadcast=True)
 # ─── Run ─────────────────────────────────────────────────────────────────────
 
 if __name__ == '__main__':
