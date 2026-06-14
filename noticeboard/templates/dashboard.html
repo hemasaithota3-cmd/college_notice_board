@@ -1,0 +1,267 @@
+{% extends "base.html" %}
+{% block title %}Dashboard{% endblock %}
+{% block page_title %}Dashboard{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <div class="page-header-title">Good {{ 'morning' if now.hour < 12 else 'afternoon' if now.hour < 17 else 'evening' }}, {{ session.name.split()[0] }} 👋</div>
+    <div class="page-header-sub">{{ now.strftime('%A, %d %B %Y') }} · {{ session.role | capitalize }} Dashboard</div>
+  </div>
+  {% if session.role in ['admin','faculty'] %}
+  <a href="{{ url_for('add_notice') }}" class="btn-primary-custom">
+    <i class="bi bi-plus-lg"></i> Post Notice
+  </a>
+  {% endif %}
+</div>
+
+<!-- Stat Cards -->
+<div class="row g-3 mb-4">
+  <div class="col-6 col-lg-3">
+    <div class="stat-card stat-blue">
+      <div class="stat-icon" style="background:rgba(26,86,219,.15);color:var(--primary)">
+        <i class="bi bi-megaphone"></i>
+      </div>
+      <div class="stat-value" style="color:var(--primary)">{{ total }}</div>
+      <div class="stat-label text-muted">Total Notices</div>
+      <div class="stat-bg"><i class="bi bi-megaphone"></i></div>
+    </div>
+  </div>
+  <div class="col-6 col-lg-3">
+    <div class="stat-card stat-green">
+      <div class="stat-icon" style="background:rgba(14,159,110,.15);color:#0e9f6e">
+        <i class="bi bi-check-circle"></i>
+      </div>
+      <div class="stat-value" style="color:#0e9f6e">{{ active }}</div>
+      <div class="stat-label text-muted">Active Notices</div>
+      <div class="stat-bg"><i class="bi bi-check-circle"></i></div>
+    </div>
+  </div>
+  <div class="col-6 col-lg-3">
+    <div class="stat-card stat-orange">
+      <div class="stat-icon" style="background:rgba(217,119,6,.15);color:#d97706">
+        <i class="bi bi-clock-history"></i>
+      </div>
+      <div class="stat-value" style="color:#d97706">{{ expired }}</div>
+      <div class="stat-label text-muted">Expired Notices</div>
+      <div class="stat-bg"><i class="bi bi-clock-history"></i></div>
+    </div>
+  </div>
+  <div class="col-6 col-lg-3">
+    <div class="stat-card stat-purple">
+      <div class="stat-icon" style="background:rgba(126,58,242,.15);color:#7e3af2">
+        <i class="bi bi-people"></i>
+      </div>
+      <div class="stat-value" style="color:#7e3af2">{{ total_users }}</div>
+      <div class="stat-label text-muted">Total Users</div>
+      <div class="stat-bg"><i class="bi bi-people"></i></div>
+    </div>
+  </div>
+</div>
+
+<!-- Charts + Recent -->
+<div class="row g-3 mb-4">
+  <!-- Category Chart -->
+  <div class="col-lg-4">
+    <div class="card-custom h-100">
+      <div class="card-body-custom">
+        <div class="d-flex align-items-center justify-content-between mb-3">
+          <h6 style="font-weight:700;font-size:15px">Notices by Category</h6>
+          <span class="badge-cat" style="background:var(--primary-light);color:var(--primary)">
+            <i class="bi bi-pie-chart"></i>
+          </span>
+        </div>
+        <canvas id="categoryChart" height="220"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <!-- Recent Notices -->
+  <div class="col-lg-8">
+    <div class="card-custom h-100">
+      <div class="card-body-custom">
+        <div class="d-flex align-items-center justify-content-between mb-3">
+          <h6 style="font-weight:700;font-size:15px">Recent Notices</h6>
+          <a href="{{ url_for('notices') }}" style="font-size:13px;color:var(--primary);text-decoration:none;font-weight:600">View all →</a>
+        </div>
+        {% if notices %}
+        <div style="overflow-x:auto">
+          <table class="table-custom">
+            <thead>
+              <tr>
+                <th>Title</th>
+                <th>Category</th>
+                <th>Priority</th>
+                <th>Date</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for n in notices %}
+              <tr>
+                <td>
+                  <div style="font-weight:600;font-size:13px;max-width:220px" class="text-truncate">{{ n.title }}</div>
+                  <div style="font-size:11px;color:var(--text-muted)">by {{ n.author_name }}</div>
+                </td>
+                <td><span class="badge-cat" style="background:var(--primary-light);color:var(--primary)">{{ n.cat_name }}</span></td>
+                <td>
+                  <span class="priority-badge pb-{{ n.priority }}">{{ n.priority }}</span>
+                </td>
+                <td style="font-size:12px;color:var(--text-muted)">{{ n.created_at.strftime('%d %b') if n.created_at else '–' }}</td>
+                <td>
+                  <a href="{{ url_for('notice_detail', nid=n.id) }}" style="color:var(--primary);text-decoration:none;font-size:13px">
+                    <i class="bi bi-arrow-right"></i>
+                  </a>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% else %}
+        <div class="text-center py-4 text-muted">
+          <i class="bi bi-inbox" style="font-size:40px;opacity:.3"></i>
+          <p class="mt-2 mb-0 fs-sm">No notices yet.</p>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Bottom row -->
+<div class="row g-3">
+  {% if session.role == 'admin' %}
+  <!-- User breakdown -->
+  <div class="col-lg-4">
+    <div class="card-custom">
+      <div class="card-body-custom">
+        <h6 style="font-weight:700;font-size:15px;margin-bottom:16px">User Breakdown</h6>
+        <canvas id="userChart" height="180"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <!-- Activity Log -->
+  <div class="col-lg-8">
+    <div class="card-custom">
+      <div class="card-body-custom">
+        <h6 style="font-weight:700;font-size:15px;margin-bottom:14px">Recent Activity</h6>
+        {% if activity %}
+        <div style="max-height:240px;overflow-y:auto">
+          {% for a in activity %}
+          <div style="display:flex;align-items:flex-start;gap:10px;padding:10px 0;border-bottom:1px solid var(--border)">
+            <div style="width:34px;height:34px;border-radius:50%;background:var(--primary-light);color:var(--primary);display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0">
+              <i class="bi bi-{% if 'LOGIN' in a.action %}box-arrow-in-right{% elif 'NOTICE' in a.action %}megaphone{% elif 'USER' in a.action %}person{% else %}activity{% endif %}"></i>
+            </div>
+            <div>
+              <div style="font-size:13px;font-weight:600">{{ a.full_name }}</div>
+              <div style="font-size:12px;color:var(--text-muted)">{{ a.action }} · {{ a.created_at.strftime('%d %b %H:%M') if a.created_at else '' }}</div>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+        {% else %}
+        <div class="text-center py-3 text-muted" style="font-size:13px">No recent activity.</div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  {% if session.role == 'admin' %}
+  <!-- Quick Actions -->
+  <div class="col-12">
+    <div class="card-custom">
+      <div class="card-body-custom">
+        <h6 style="font-weight:700;font-size:15px;margin-bottom:14px">Quick Actions</h6>
+        <div style="display:flex;gap:10px;flex-wrap:wrap">
+          <a href="{{ url_for('add_notice') }}" class="btn-primary-custom"><i class="bi bi-plus-lg"></i> Post Notice</a>
+          <a href="{{ url_for('add_user') }}" class="btn-outline-custom"><i class="bi bi-person-plus"></i> Add User</a>
+          <button class="btn-outline-custom" onclick="expireNotices()"><i class="bi bi-clock"></i> Run Expiry Check</button>
+          <a href="{{ url_for('archive') }}" class="btn-outline-custom"><i class="bi bi-archive"></i> View Archive</a>
+        </div>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+  {% else %}
+  <!-- Priority breakdown for faculty/student -->
+  <div class="col-12">
+    <div class="card-custom">
+      <div class="card-body-custom">
+        <h6 style="font-weight:700;font-size:15px;margin-bottom:14px">Priority Overview</h6>
+        <canvas id="priorityChart" height="80"></canvas>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+const textColor = isDark ? '#94a3b8' : '#6b7280';
+const gridColor = isDark ? '#2d3048' : '#e5e7eb';
+
+Chart.defaults.color = textColor;
+Chart.defaults.borderColor = gridColor;
+Chart.defaults.font.family = 'Inter';
+
+// Category Doughnut
+const catData = {{ cat_stats | tojson }};
+if (catData.length && document.getElementById('categoryChart')) {
+  new Chart(document.getElementById('categoryChart'), {
+    type: 'doughnut',
+    data: {
+      labels: catData.map(c => c.name),
+      datasets: [{
+        data: catData.map(c => c.cnt),
+        backgroundColor: ['#1a56db','#0e9f6e','#d97706','#7e3af2','#e02424','#6b7280'],
+        borderWidth: 2, borderColor: isDark ? '#1a1d27' : '#fff',
+        hoverOffset: 6
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { position: 'bottom', labels: { padding: 12, font: { size: 12 } } } },
+      cutout: '65%'
+    }
+  });
+}
+
+// User Bar Chart (admin)
+const userStats = {{ user_stats | tojson }};
+if (Object.keys(userStats).length && document.getElementById('userChart')) {
+  new Chart(document.getElementById('userChart'), {
+    type: 'bar',
+    data: {
+      labels: ['Admin', 'Faculty', 'Student'],
+      datasets: [{
+        label: 'Users',
+        data: [userStats.admin||0, userStats.faculty||0, userStats.student||0],
+        backgroundColor: ['#1a56db99','#0e9f6e99','#7e3af299'],
+        borderRadius: 8
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { grid: { display: false }, border: { display: false } },
+        y: { grid: { color: gridColor }, border: { display: false }, ticks: { stepSize: 1 } }
+      }
+    }
+  });
+}
+
+async function expireNotices() {
+  const res  = await fetch('/api/expire-notices', { method: 'POST' });
+  const data = await res.json();
+  alert(`✅ Archived ${data.archived} expired notice(s).`);
+  location.reload();
+}
+</script>
+{% endblock %}

@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+{% block title %}Add User{% endblock %}
+{% block page_title %}Add User{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <a href="{{ url_for('manage_users') }}" style="color:var(--text-muted);font-size:13px;text-decoration:none">
+      <i class="bi bi-arrow-left"></i> Back to Users
+    </a>
+    <div class="page-header-title mt-1">Add New User</div>
+  </div>
+</div>
+
+<div class="row g-3">
+  <div class="col-lg-6">
+    <div class="card-custom">
+      <div class="card-body-custom">
+        <form method="POST">
+          <div class="row g-3">
+            <div class="col-12">
+              <label class="form-label-custom">Full Name *</label>
+              <input type="text" name="full_name" class="form-control-custom" placeholder="Dr. Ramesh Kumar" required>
+            </div>
+            <div class="col-12">
+              <label class="form-label-custom">Email Address *</label>
+              <input type="email" name="email" class="form-control-custom" placeholder="user@college.edu" required>
+            </div>
+            <div class="col-12">
+              <label class="form-label-custom">Password *</label>
+              <input type="password" name="password" class="form-control-custom" placeholder="Min. 8 characters" required minlength="6">
+            </div>
+            <div class="col-6">
+              <label class="form-label-custom">Role *</label>
+              <select name="role" class="form-control-custom form-select-custom" required>
+                <option value="student">Student</option>
+                <option value="faculty">Faculty</option>
+                <option value="admin">Admin</option>
+              </select>
+            </div>
+            <div class="col-6">
+              <label class="form-label-custom">Department</label>
+              <input type="text" name="department" class="form-control-custom" placeholder="Computer Science">
+            </div>
+            <div class="col-12">
+              <div style="display:flex;gap:10px">
+                <button type="submit" class="btn-primary-custom"><i class="bi bi-person-plus"></i> Add User</button>
+                <a href="{{ url_for('manage_users') }}" class="btn-outline-custom">Cancel</a>
+              </div>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-6">
+    <div class="card-custom" style="background:linear-gradient(135deg,var(--primary-light),transparent)">
+      <div class="card-body-custom">
+        <h6 style="font-weight:700;font-size:14px;margin-bottom:12px"><i class="bi bi-info-circle text-primary"></i> Role Permissions</h6>
+        <div style="font-size:13px;display:flex;flex-direction:column;gap:14px">
+          <div>
+            <div style="font-weight:700;color:var(--primary);margin-bottom:4px"><i class="bi bi-shield-lock"></i> Admin</div>
+            <div style="color:var(--text-muted)">Full access — manage all notices, users, categories, archive, and analytics.</div>
+          </div>
+          <div>
+            <div style="font-weight:700;color:#0e9f6e;margin-bottom:4px"><i class="bi bi-person-badge"></i> Faculty</div>
+            <div style="color:var(--text-muted)">Post, edit, and delete their own notices. View all notices.</div>
+          </div>
+          <div>
+            <div style="font-weight:700;color:var(--purple);margin-bottom:4px"><i class="bi bi-mortarboard"></i> Student</div>
+            <div style="color:var(--text-muted)">View and search notices. Download attachments. Receive notifications.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% block title %}Archive{% endblock %}
+{% block page_title %}Notice Archive{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <div class="page-header-title">Notice Archive</div>
+    <div class="page-header-sub">{{ notices|length }} archived notice(s)</div>
+  </div>
+</div>
+
+<div class="card-custom">
+  <div class="card-body-custom">
+    {% if notices %}
+    <div style="overflow-x:auto">
+      <table class="table-custom">
+        <thead>
+          <tr>
+            <th>#</th><th>Title</th><th>Category</th><th>Posted By</th><th>Archived On</th><th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for n in notices %}
+          <tr style="opacity:.7">
+            <td style="font-size:12px;color:var(--text-muted)">{{ n.id }}</td>
+            <td>
+              <div style="font-weight:600;font-size:13px">{{ n.title }}</div>
+              <div style="font-size:11px;color:var(--text-muted)">{{ n.description[:80] }}…</div>
+            </td>
+            <td><span class="badge-cat" style="background:var(--bg);color:var(--text-muted)">{{ n.cat_name }}</span></td>
+            <td style="font-size:13px">{{ n.author_name }}</td>
+            <td style="font-size:12px;color:var(--text-muted)">{{ n.updated_at.strftime('%d %b %Y') if n.updated_at else '–' }}</td>
+            <td>
+              <form method="POST" action="{{ url_for('delete_notice', nid=n.id) }}" style="display:inline" onsubmit="return confirm('Permanently delete this notice?')">
+                <button class="btn-outline-custom btn-danger-custom" style="padding:4px 10px;font-size:12px">
+                  <i class="bi bi-trash"></i> Delete
+                </button>
+              </form>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <div class="text-center py-5">
+      <i class="bi bi-archive" style="font-size:56px;opacity:.3;color:var(--text-muted)"></i>
+      <p style="margin-top:14px;font-weight:600">Archive is empty</p>
+      <p style="color:var(--text-muted);font-size:13px">Archived notices will appear here.</p>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

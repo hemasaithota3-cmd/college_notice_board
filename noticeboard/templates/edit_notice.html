@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+{% block title %}Edit Notice{% endblock %}
+{% block page_title %}Edit Notice{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <a href="{{ url_for('notice_detail', nid=notice.id) }}" style="color:var(--text-muted);font-size:13px;text-decoration:none">
+      <i class="bi bi-arrow-left"></i> Back to Notice
+    </a>
+    <div class="page-header-title mt-1">Edit Notice #{{ notice.id }}</div>
+  </div>
+</div>
+
+<div class="row g-3">
+  <div class="col-lg-8">
+    <div class="card-custom">
+      <div class="card-body-custom">
+        <form method="POST" enctype="multipart/form-data">
+          <div class="row g-3">
+            <div class="col-12">
+              <label class="form-label-custom">Notice Title *</label>
+              <input type="text" name="title" class="form-control-custom"
+                     value="{{ notice.title }}" required maxlength="300">
+            </div>
+            <div class="col-6">
+              <label class="form-label-custom">Category *</label>
+              <select name="category_id" class="form-control-custom form-select-custom" required>
+                {% for c in categories %}
+                <option value="{{ c.id }}" {% if c.id == notice.category_id %}selected{% endif %}>{{ c.name }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="col-6">
+              <label class="form-label-custom">Priority</label>
+              <select name="priority" class="form-control-custom form-select-custom">
+                {% for p in ['low','normal','high','urgent'] %}
+                <option value="{{ p }}" {% if p == notice.priority %}selected{% endif %}>{{ p | capitalize }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="col-12">
+              <label class="form-label-custom">Description *</label>
+              <textarea name="description" class="form-control-custom" rows="7" required>{{ notice.description }}</textarea>
+            </div>
+            <div class="col-6">
+              <label class="form-label-custom">Expiry Date</label>
+              <input type="date" name="expiry_date" class="form-control-custom"
+                     value="{{ notice.expiry_date.strftime('%Y-%m-%d') if notice.expiry_date else '' }}">
+            </div>
+            <div class="col-12">
+              <label class="form-label-custom">Replace Attachment (optional)</label>
+              {% if notice.attachment %}
+              <div style="padding:10px;background:var(--bg);border-radius:8px;margin-bottom:10px;font-size:13px;display:flex;align-items:center;gap:8px">
+                <i class="bi bi-paperclip"></i>
+                Current: <strong>{{ notice.attachment.split('/')[-1] }}</strong>
+                <a href="{{ url_for('uploaded_file', filename=notice.attachment) }}" target="_blank" style="color:var(--primary)">View</a>
+              </div>
+              {% endif %}
+              <input type="file" name="attachment" class="form-control-custom" accept=".pdf,.png,.jpg,.jpeg,.gif">
+            </div>
+            <div class="col-12">
+              <div style="display:flex;gap:10px">
+                <button type="submit" class="btn-primary-custom"><i class="bi bi-save"></i> Save Changes</button>
+                <a href="{{ url_for('notice_detail', nid=notice.id) }}" class="btn-outline-custom">Cancel</a>
+              </div>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+{% block title %}Profile{% endblock %}
+{% block page_title %}My Profile{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div class="page-header-title">My Profile</div>
+</div>
+
+<div class="row g-3">
+  <div class="col-lg-4">
+    <div class="card-custom text-center">
+      <div class="card-body-custom" style="padding:30px 20px">
+        <div style="width:80px;height:80px;border-radius:50%;background:linear-gradient(135deg,var(--primary),var(--purple));
+          display:flex;align-items:center;justify-content:center;color:#fff;font-size:32px;font-weight:800;
+          font-family:'Space Grotesk',sans-serif;margin:0 auto 16px">
+          {{ user.full_name[0].upper() }}
+        </div>
+        <h5 style="font-weight:700;font-family:'Space Grotesk',sans-serif">{{ user.full_name }}</h5>
+        <div style="color:var(--text-muted);font-size:13px">{{ user.email }}</div>
+        <span class="badge-cat mt-2" style="display:inline-block;background:var(--primary-light);color:var(--primary)">
+          {{ user.role | capitalize }}
+        </span>
+        <div style="margin-top:16px;font-size:13px;color:var(--text-muted)">
+          <i class="bi bi-building"></i> {{ user.department or 'No department set' }}
+        </div>
+        <div style="margin-top:6px;font-size:12px;color:var(--text-muted)">
+          <i class="bi bi-calendar"></i> Joined {{ user.created_at.strftime('%B %Y') if user.created_at else '–' }}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-8">
+    <div class="card-custom">
+      <div class="card-body-custom">
+        <h6 style="font-weight:700;font-size:15px;margin-bottom:20px">Edit Profile</h6>
+        <form method="POST">
+          <div class="row g-3">
+            <div class="col-12">
+              <label class="form-label-custom">Full Name</label>
+              <input type="text" name="full_name" class="form-control-custom" value="{{ user.full_name }}" required>
+            </div>
+            <div class="col-12">
+              <label class="form-label-custom">Email Address</label>
+              <input type="email" class="form-control-custom" value="{{ user.email }}" disabled style="opacity:.6">
+              <div style="font-size:11px;color:var(--text-muted);margin-top:4px">Email cannot be changed. Contact admin if needed.</div>
+            </div>
+            <div class="col-12">
+              <label class="form-label-custom">Department</label>
+              <input type="text" name="department" class="form-control-custom" value="{{ user.department or '' }}" placeholder="e.g. Computer Science">
+            </div>
+            <div class="col-12">
+              <label class="form-label-custom">New Password <span style="color:var(--text-muted)">(leave blank to keep current)</span></label>
+              <input type="password" name="new_password" class="form-control-custom" placeholder="Enter new password" minlength="6">
+            </div>
+            <div class="col-12">
+              <button type="submit" class="btn-primary-custom"><i class="bi bi-save"></i> Save Changes</button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

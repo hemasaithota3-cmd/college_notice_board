@@ -1,0 +1,106 @@
+{% extends "base.html" %}
+{% block title %}Manage Users{% endblock %}
+{% block page_title %}User Management{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <div class="page-header-title">Manage Users</div>
+    <div class="page-header-sub">{{ users|length }} registered users</div>
+  </div>
+  <a href="{{ url_for('add_user') }}" class="btn-primary-custom">
+    <i class="bi bi-person-plus"></i> Add User
+  </a>
+</div>
+
+<div class="card-custom">
+  <div class="card-body-custom">
+    <!-- Search -->
+    <div style="margin-bottom:16px">
+      <div style="position:relative">
+        <i class="bi bi-search" style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--text-muted)"></i>
+        <input type="text" id="userSearch" class="form-control-custom" style="padding-left:36px" placeholder="Search users…">
+      </div>
+    </div>
+
+    <div style="overflow-x:auto">
+      <table class="table-custom" id="usersTable">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Name</th>
+            <th>Email</th>
+            <th>Role</th>
+            <th>Department</th>
+            <th>Status</th>
+            <th>Joined</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for u in users %}
+          <tr>
+            <td style="color:var(--text-muted);font-size:12px">{{ u.id }}</td>
+            <td>
+              <div style="display:flex;align-items:center;gap:8px">
+                <div style="width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,var(--primary),var(--purple));display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:12px;flex-shrink:0">
+                  {{ u.full_name[0].upper() }}
+                </div>
+                <span style="font-weight:600;font-size:13px">{{ u.full_name }}</span>
+              </div>
+            </td>
+            <td style="font-size:13px;color:var(--text-muted)">{{ u.email }}</td>
+            <td>
+              <span class="badge-cat" style="
+                background:{{'rgba(26,86,219,.12)' if u.role=='admin' else 'rgba(14,159,110,.12)' if u.role=='faculty' else 'rgba(126,58,242,.12)'}};
+                color:{{'var(--primary)' if u.role=='admin' else '#0e9f6e' if u.role=='faculty' else 'var(--purple)'}};
+                font-size:11px">
+                {{ u.role | capitalize }}
+              </span>
+            </td>
+            <td style="font-size:13px">{{ u.department or '–' }}</td>
+            <td>
+              <span style="display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:600;
+                color:{{'#0e9f6e' if u.is_active else 'var(--danger)'}}">
+                <i class="bi bi-{{'check-circle' if u.is_active else 'x-circle'}}"></i>
+                {{ 'Active' if u.is_active else 'Inactive' }}
+              </span>
+            </td>
+            <td style="font-size:12px;color:var(--text-muted)">
+              {{ u.created_at.strftime('%d %b %Y') if u.created_at else '–' }}
+            </td>
+            <td>
+              <div style="display:flex;gap:6px">
+                <form method="POST" action="{{ url_for('toggle_user', uid=u.id) }}" style="display:inline">
+                  <button class="btn-outline-custom" style="padding:4px 10px;font-size:12px" title="{{ 'Deactivate' if u.is_active else 'Activate' }}">
+                    <i class="bi bi-{{ 'toggle-on' if u.is_active else 'toggle-off' }}"></i>
+                  </button>
+                </form>
+                {% if u.id != session.user_id %}
+                <form method="POST" action="{{ url_for('delete_user', uid=u.id) }}" style="display:inline" onsubmit="return confirm('Delete user {{ u.full_name }}?')">
+                  <button class="btn-outline-custom btn-danger-custom" style="padding:4px 10px;font-size:12px">
+                    <i class="bi bi-trash"></i>
+                  </button>
+                </form>
+                {% endif %}
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.getElementById('userSearch').addEventListener('input', function() {
+  const q = this.value.toLowerCase();
+  document.querySelectorAll('#usersTable tbody tr').forEach(row => {
+    row.style.display = row.textContent.toLowerCase().includes(q) ? '' : 'none';
+  });
+});
+</script>
+{% endblock %}

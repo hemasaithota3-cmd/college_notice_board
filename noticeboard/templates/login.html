@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login — CollegeBoard</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #1a56db; --primary-dark: #1245b8;
+      --bg: #f0f4ff; --surface: #fff;
+      --text: #111827; --text-muted: #6b7280;
+      --border: #e5e7eb; --radius: 16px;
+    }
+    [data-theme="dark"] {
+      --bg: #0f1117; --surface: #1a1d27;
+      --text: #f1f5f9; --text-muted: #94a3b8; --border: #2d3048;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg); color: var(--text);
+      min-height: 100vh; display: flex;
+      transition: background .22s, color .22s;
+    }
+
+    /* ── Left Panel ── */
+    .login-panel-left {
+      flex: 0 0 50%;
+      position: relative;
+      overflow: hidden;
+    }
+    /* Carousel fills the full left panel */
+    .login-panel-left .carousel,
+    .login-panel-left .carousel-inner,
+    .login-panel-left .carousel-item {
+      height: 100%;
+    }
+    .login-panel-left .carousel-item img {
+      width: 100%; height: 100%;
+      object-fit: cover;
+    }
+    /* Overlay text on carousel */
+    .carousel-overlay {
+      position: absolute; inset: 0; z-index: 10;
+      background: linear-gradient(135deg, rgba(26,86,219,.72) 0%, rgba(126,58,242,.65) 60%, rgba(14,159,110,.55) 100%);
+      display: flex; flex-direction: column;
+      justify-content: center; align-items: center;
+      padding: 40px; text-align: center;
+    }
+    .carousel-overlay .brand-logo-big {
+      width: 64px; height: 64px; border-radius: 18px;
+      background: rgba(255,255,255,.2); backdrop-filter: blur(8px);
+      border: 2px solid rgba(255,255,255,.3);
+      display: flex; align-items: center; justify-content: center;
+      font-family: 'Space Grotesk', sans-serif; font-size: 28px;
+      font-weight: 800; color: #fff; margin-bottom: 20px;
+    }
+    .carousel-overlay h1 {
+      font-family: 'Space Grotesk', sans-serif; font-weight: 800;
+      font-size: 34px; color: #fff; line-height: 1.2; margin-bottom: 12px;
+    }
+    .carousel-overlay p { color: rgba(255,255,255,.8); font-size: 14px; max-width: 320px; }
+    .hero-stats { display: flex; gap: 28px; margin-top: 32px; }
+    .hero-stat { text-align: center; color: #fff; }
+    .hero-stat .val { font-family: 'Space Grotesk', sans-serif; font-size: 28px; font-weight: 800; }
+    .hero-stat .lbl { font-size: 12px; opacity: .75; margin-top: 2px; }
+    /* Carousel control arrows visibility */
+    .login-panel-left .carousel-control-prev,
+    .login-panel-left .carousel-control-next { z-index: 20; opacity: .6; }
+    .login-panel-left .carousel-indicators { z-index: 20; }
+
+    /* ── Right Panel ── */
+    .login-panel-right {
+      flex: 1; display: flex; align-items: center; justify-content: center;
+      padding: 40px 32px;
+    }
+    .login-box { width: 100%; max-width: 420px; }
+    .login-box h2 {
+      font-family: 'Space Grotesk', sans-serif; font-weight: 700;
+      font-size: 26px; margin-bottom: 6px;
+    }
+    .login-box .subtitle { color: var(--text-muted); font-size: 14px; margin-bottom: 28px; }
+
+    /* Role tabs */
+    .role-tabs { display: flex; gap: 8px; margin-bottom: 24px; }
+    .role-tab {
+      flex: 1; padding: 10px; border-radius: 10px;
+      border: 2px solid var(--border); background: var(--bg);
+      cursor: pointer; text-align: center; font-size: 13px;
+      font-weight: 600; transition: all .2s; display: flex;
+      flex-direction: column; align-items: center; gap: 4px; color: var(--text-muted);
+    }
+    .role-tab i { font-size: 20px; }
+    .role-tab.active { border-color: var(--primary); background: #e8effd; color: var(--primary); }
+    [data-theme="dark"] .role-tab.active { background: #1e2a4a; }
+
+    /* Form */
+    .form-group { margin-bottom: 16px; }
+    .form-label { font-size: 13px; font-weight: 600; margin-bottom: 6px; display: block; }
+    .input-wrap { position: relative; }
+    .input-wrap i { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text-muted); }
+    .form-input {
+      width: 100%; padding: 11px 12px 11px 38px;
+      border: 1.5px solid var(--border); border-radius: 10px;
+      font-size: 14px; background: var(--bg); color: var(--text);
+      outline: none; transition: border-color .2s, box-shadow .2s;
+    }
+    .form-input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(26,86,219,.12); }
+    .toggle-pw {
+      position: absolute; right: 12px; top: 50%;
+      transform: translateY(-50%); cursor: pointer;
+      color: var(--text-muted); background: none; border: none; font-size: 16px;
+    }
+
+    .btn-login {
+      width: 100%; padding: 12px; border: none; border-radius: 10px;
+      background: var(--primary); color: #fff; font-size: 15px;
+      font-weight: 700; cursor: pointer; transition: all .2s;
+      margin-top: 8px;
+    }
+    .btn-login:hover { background: var(--primary-dark); transform: translateY(-1px); box-shadow: 0 4px 12px rgba(26,86,219,.35); }
+
+    .demo-creds {
+      margin-top: 20px; padding: 14px;
+      background: var(--bg); border: 1px solid var(--border); border-radius: 10px;
+    }
+    .demo-creds h6 { font-size: 12px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: .05em; margin-bottom: 8px; }
+    .demo-item { font-size: 12.5px; display: flex; justify-content: space-between; margin-bottom: 4px; }
+    .demo-item span:first-child { color: var(--text-muted); }
+    .demo-item strong { font-size: 12px; color: var(--primary); cursor: pointer; }
+
+    .alert-msg { padding: 10px 14px; border-radius: 8px; font-size: 13px; margin-bottom: 16px; }
+    .alert-error { background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; }
+    .alert-ok    { background: #d1fae5; color: #065f46; border: 1px solid #6ee7b7; }
+
+    .theme-toggle-login {
+      position: fixed; top: 16px; right: 16px;
+      width: 38px; height: 38px; border-radius: 50%;
+      background: var(--surface); border: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; transition: all .2s;
+    }
+    .theme-toggle-login:hover { border-color: var(--primary); color: var(--primary); }
+
+    @media (max-width: 768px) {
+      .login-panel-left { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+<button class="theme-toggle-login" onclick="toggleTheme()" title="Toggle dark mode">
+  <i class="bi bi-moon" id="themeIcon"></i>
+</button>
+
+<!-- Left — Image Carousel -->
+<div class="login-panel-left">
+  <!-- Bootstrap Carousel -->
+  <div id="loginCarousel" class="carousel slide h-100" data-bs-ride="carousel" data-bs-interval="3500">
+    <div class="carousel-indicators">
+      <button type="button" data-bs-target="#loginCarousel" data-bs-slide-to="0" class="active"></button>
+      <button type="button" data-bs-target="#loginCarousel" data-bs-slide-to="1"></button>
+      <button type="button" data-bs-target="#loginCarousel" data-bs-slide-to="2"></button>
+      <button type="button" data-bs-target="#loginCarousel" data-bs-slide-to="3"></button>
+    </div>
+    <div class="carousel-inner h-100">
+      <!-- Slide 1 — gradient fallback (shows even without images) -->
+      <div class="carousel-item active h-100">
+        <div style="height:100%;background:linear-gradient(145deg,#1a56db,#7e3af2)"></div>
+      </div>
+      <!-- Slides 2-4: place your college images in static/images/ -->
+      <div class="carousel-item h-100">
+        <div style="height:100%;background:linear-gradient(145deg,#7e3af2,#0e9f6e)"></div>
+      </div>
+      <div class="carousel-item h-100">
+        <div style="height:100%;background:linear-gradient(145deg,#0e9f6e,#1a56db)"></div>
+      </div>
+      <div class="carousel-item h-100">
+        <div style="height:100%;background:linear-gradient(145deg,#d97706,#e02424)"></div>
+      </div>
+    </div>
+    <button class="carousel-control-prev" type="button" data-bs-target="#loginCarousel" data-bs-slide="prev">
+      <span class="carousel-control-prev-icon"></span>
+    </button>
+    <button class="carousel-control-next" type="button" data-bs-target="#loginCarousel" data-bs-slide="next">
+      <span class="carousel-control-next-icon"></span>
+    </button>
+  </div>
+  <!-- Overlay text on top of carousel -->
+  <div class="carousel-overlay">
+    <div class="brand-logo-big">CB</div>
+    <h1>Smart College<br>Notice Board</h1>
+    <p>Your centralized hub for all college announcements, deadlines, and events.</p>
+    <div class="hero-stats">
+      <div class="hero-stat"><div class="val">500+</div><div class="lbl">Students</div></div>
+      <div class="hero-stat"><div class="val">50+</div><div class="lbl">Faculty</div></div>
+      <div class="hero-stat"><div class="val">6</div><div class="lbl">Categories</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- Right -->
+<div class="login-panel-right">
+  <div class="login-box">
+    <h2>Welcome back 👋</h2>
+    <p class="subtitle">Sign in to access your notice board</p>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% for cat, msg in messages %}
+      <div class="alert-msg alert-{{ 'error' if cat=='danger' else 'ok' }}">{{ msg }}</div>
+      {% endfor %}
+    {% endwith %}
+
+    <!-- Role selector -->
+    <div class="role-tabs">
+      <div class="role-tab active" data-role="admin"   onclick="setRole('admin')">
+        <i class="bi bi-shield-lock"></i> Admin
+      </div>
+      <div class="role-tab" data-role="faculty" onclick="setRole('faculty')">
+        <i class="bi bi-person-badge"></i> Faculty
+      </div>
+      <div class="role-tab" data-role="student" onclick="setRole('student')">
+        <i class="bi bi-mortarboard"></i> Student
+      </div>
+    </div>
+
+    <form method="POST" action="{{ url_for('login') }}" id="loginForm">
+      <input type="hidden" name="role" id="roleInput" value="admin">
+
+      <div class="form-group">
+        <label class="form-label">Email Address</label>
+        <div class="input-wrap">
+          <i class="bi bi-envelope"></i>
+          <input type="email" name="email" class="form-input" id="emailInput"
+                 placeholder="you@college.edu" required autocomplete="email">
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Password</label>
+        <div class="input-wrap">
+          <i class="bi bi-lock"></i>
+          <input type="password" name="password" class="form-input" id="pwInput"
+                 placeholder="••••••••" required autocomplete="current-password">
+          <button type="button" class="toggle-pw" onclick="togglePw()">
+            <i class="bi bi-eye" id="pwEye"></i>
+          </button>
+        </div>
+      </div>
+
+      <button type="submit" class="btn-login">Sign In</button>
+    </form>
+
+    <!-- Register link -->
+    <div style="text-align:center;margin-top:16px;font-size:13px;color:var(--text-muted)">
+      Don't have an account?
+      <a href="/register" style="color:var(--primary);font-weight:600;text-decoration:none">Register here</a>
+    </div>
+
+    <!-- Demo credentials -->
+    <div class="demo-creds mt-3">
+      <h6>Demo Credentials</h6>
+      <div class="demo-item">
+        <span>Admin</span>
+        <strong onclick="fillDemo('admin@college.edu','admin','Admin@123')">Click to fill →</strong>
+      </div>
+      <div class="demo-item">
+        <span>Faculty</span>
+        <strong onclick="fillDemo('faculty@college.edu','faculty','Faculty@123')">Click to fill →</strong>
+      </div>
+      <div class="demo-item">
+        <span>Student</span>
+        <strong onclick="fillDemo('student@college.edu','student','Student@123')">Click to fill →</strong>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+let currentRole = 'admin';
+
+function setRole(role) {
+  currentRole = role;
+  document.getElementById('roleInput').value = role;
+  document.querySelectorAll('.role-tab').forEach(t => {
+    t.classList.toggle('active', t.dataset.role === role);
+  });
+}
+
+function fillDemo(email, role, password) {
+  document.getElementById('emailInput').value  = email;
+  document.getElementById('pwInput').value     = password;
+  setRole(role);
+}
+
+function togglePw() {
+  const inp = document.getElementById('pwInput');
+  const eye = document.getElementById('pwEye');
+  if (inp.type === 'password') { inp.type = 'text';     eye.className = 'bi bi-eye-slash'; }
+  else                         { inp.type = 'password'; eye.className = 'bi bi-eye'; }
+}
+
+// Dark mode
+const html = document.documentElement;
+const saved = localStorage.getItem('theme') || 'light';
+html.setAttribute('data-theme', saved);
+document.getElementById('themeIcon').className = saved === 'dark' ? 'bi bi-sun' : 'bi bi-moon';
+
+function toggleTheme() {
+  const next = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+  html.setAttribute('data-theme', next);
+  localStorage.setItem('theme', next);
+  document.getElementById('themeIcon').className = next === 'dark' ? 'bi bi-sun' : 'bi bi-moon';
+}
+
+// Pre-set role from tab if user chose
+setRole('admin');
+</script>
+</body>
+</html>

@@ -1,0 +1,245 @@
+{% extends "base.html" %}
+{% block title %}{{ notice.title }}{% endblock %}
+{% block page_title %}Notice Detail{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <a href="{{ url_for('notices') }}" style="color:var(--text-muted);font-size:13px;text-decoration:none">
+      <i class="bi bi-arrow-left"></i> Back to Notices
+    </a>
+    <div class="page-header-title mt-1">{{ notice.title }}</div>
+  </div>
+  <div style="display:flex;gap:8px;flex-wrap:wrap">
+    <a href="{{ url_for('export_pdf', nid=notice.id) }}" class="btn-outline-custom">
+      <i class="bi bi-file-earmark-pdf text-danger"></i> Export PDF
+    </a>
+    {% if session.role in ['admin','faculty'] %}
+    {% if session.role == 'admin' or notice.user_id == session.user_id %}
+    <a href="{{ url_for('edit_notice', nid=notice.id) }}" class="btn-outline-custom">
+      <i class="bi bi-pencil"></i> Edit
+    </a>
+    {% endif %}
+    {% endif %}
+  </div>
+</div>
+
+<div class="row g-3">
+  <!-- Main Content -->
+  <div class="col-lg-8">
+    <div class="card-custom">
+      <div class="card-body-custom">
+        <!-- Priority Banner -->
+        {% if notice.priority == 'urgent' %}
+        <div style="background:#fee2e2;border:1px solid #fca5a5;border-radius:8px;padding:10px 14px;margin-bottom:16px;display:flex;align-items:center;gap:8px;color:#991b1b;font-weight:600;font-size:13px">
+          <i class="bi bi-exclamation-triangle-fill"></i> URGENT NOTICE — Please read immediately
+        </div>
+        {% endif %}
+
+        <!-- Tags -->
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;align-items:center">
+          <span class="badge-cat" style="background:var(--primary-light);color:var(--primary);font-size:12px;padding:4px 12px">
+            <i class="bi bi-tag"></i> {{ notice.cat_name }}
+          </span>
+          <span class="priority-badge pb-{{ notice.priority }}">{{ notice.priority | upper }}</span>
+        </div>
+
+        <h1 style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:22px;line-height:1.3;margin-bottom:16px">
+          {{ notice.title }}
+        </h1>
+
+        <!-- Meta -->
+        <div style="display:flex;gap:16px;flex-wrap:wrap;padding:12px;background:var(--bg);border-radius:8px;margin-bottom:20px">
+          <div style="font-size:12px;color:var(--text-muted)">
+            <i class="bi bi-person-circle"></i>
+            <strong style="color:var(--text)">{{ notice.author_name }}</strong>
+            <span class="badge" style="background:var(--primary-light);color:var(--primary);font-size:10px;margin-left:4px">{{ notice.author_role }}</span>
+          </div>
+          <div style="font-size:12px;color:var(--text-muted)">
+            <i class="bi bi-calendar"></i> {{ notice.created_at.strftime('%d %B %Y, %I:%M %p') if notice.created_at else '–' }}
+          </div>
+          {% if notice.expiry_date %}
+          <div style="font-size:12px;color:{% if notice.expiry_date < now.date() %}var(--danger){% else %}var(--text-muted){% endif %}">
+            <i class="bi bi-hourglass"></i>
+            Expires: {{ notice.expiry_date.strftime('%d %B %Y') }}
+            {% if notice.expiry_date < now.date() %}<span style="font-weight:700">(Expired)</span>{% endif %}
+          </div>
+          {% endif %}
+          <div style="font-size:12px;color:var(--text-muted)">
+            <i class="bi bi-eye"></i> {{ notice.views }} views
+          </div>
+        </div>
+
+        <!-- Description -->
+        <div style="font-size:15px;line-height:1.8;color:var(--text)">
+          {{ notice.description | replace('\n','<br>') | safe }}
+        </div>
+
+        <!-- AI Summarizer -->
+        <div style="margin-top:24px;padding:16px;background:linear-gradient(135deg,var(--primary-light),transparent);border:1px solid var(--primary)33;border-radius:var(--radius-sm)">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
+            <i class="bi bi-robot" style="color:var(--primary);font-size:18px"></i>
+            <span style="font-weight:700;font-size:14px">AI Summary</span>
+            <span style="font-size:11px;background:var(--primary);color:#fff;padding:2px 8px;border-radius:20px">Powered by Claude</span>
+          </div>
+          <div id="aiSummary" style="font-size:13.5px;line-height:1.7;color:var(--text-muted)">
+            <button class="btn-outline-custom" onclick="summarize()" id="summarizeBtn">
+              <i class="bi bi-stars"></i> Generate AI Summary
+            </button>
+          </div>
+        </div>
+
+        <!-- Attachment -->
+        {% if notice.attachment %}
+        <div style="margin-top:20px;padding:16px;background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-sm)">
+          <h6 style="font-weight:700;font-size:13px;margin-bottom:12px"><i class="bi bi-paperclip"></i> Attachment</h6>
+          {% if notice.attach_type == 'pdf' %}
+          <div style="display:flex;align-items:center;gap:12px">
+            <i class="bi bi-file-earmark-pdf" style="font-size:36px;color:#e02424"></i>
+            <div>
+              <div style="font-weight:600;font-size:14px">{{ notice.attachment.split('/')[-1] }}</div>
+              <div style="font-size:12px;color:var(--text-muted)">PDF Document</div>
+            </div>
+            <a href="{{ url_for('uploaded_file', filename=notice.attachment) }}" download class="btn-primary-custom ms-auto">
+              <i class="bi bi-download"></i> Download
+            </a>
+          </div>
+          {% else %}
+          <div>
+            <img src="{{ url_for('uploaded_file', filename=notice.attachment) }}"
+                 alt="Notice Image" style="max-width:100%;border-radius:8px;max-height:300px;object-fit:cover">
+            <div style="margin-top:8px">
+              <a href="{{ url_for('uploaded_file', filename=notice.attachment) }}" download class="btn-outline-custom" style="font-size:13px">
+                <i class="bi bi-download"></i> Download Image
+              </a>
+            </div>
+          </div>
+          {% endif %}
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <!-- Sidebar -->
+  <div class="col-lg-4">
+    <!-- QR Code -->
+    <div class="card-custom mb-3">
+      <div class="card-body-custom text-center">
+        <h6 style="font-weight:700;font-size:14px;margin-bottom:12px">
+          <i class="bi bi-qr-code"></i> QR Code
+        </h6>
+        <img src="data:image/png;base64,{{ qr_data }}" alt="QR Code"
+             style="width:140px;height:140px;border:4px solid var(--border);border-radius:8px">
+        <p style="font-size:11px;color:var(--text-muted);margin-top:8px">
+          Scan to share this notice
+        </p>
+        <a href="data:image/png;base64,{{ qr_data }}" download="notice_{{ notice.id }}_qr.png"
+           class="btn-outline-custom" style="font-size:12px;padding:6px 14px">
+          <i class="bi bi-download"></i> Download QR
+        </a>
+      </div>
+    </div>
+
+    <!-- Notice Details -->
+    <div class="card-custom mb-3">
+      <div class="card-body-custom">
+        <h6 style="font-weight:700;font-size:14px;margin-bottom:12px">Notice Details</h6>
+        <div style="font-size:13px;display:flex;flex-direction:column;gap:10px">
+          <div style="display:flex;justify-content:space-between">
+            <span style="color:var(--text-muted)">Notice ID</span>
+            <strong>#{{ notice.id }}</strong>
+          </div>
+          <div style="display:flex;justify-content:space-between">
+            <span style="color:var(--text-muted)">Category</span>
+            <strong>{{ notice.cat_name }}</strong>
+          </div>
+          <div style="display:flex;justify-content:space-between">
+            <span style="color:var(--text-muted)">Priority</span>
+            <span class="priority-badge pb-{{ notice.priority }}">{{ notice.priority }}</span>
+          </div>
+          <div style="display:flex;justify-content:space-between">
+            <span style="color:var(--text-muted)">Posted By</span>
+            <strong>{{ notice.author_name }}</strong>
+          </div>
+          <div style="display:flex;justify-content:space-between">
+            <span style="color:var(--text-muted)">Posted On</span>
+            <strong>{{ notice.created_at.strftime('%d %b %Y') if notice.created_at else '–' }}</strong>
+          </div>
+          {% if notice.updated_at and notice.updated_at != notice.created_at %}
+          <div style="display:flex;justify-content:space-between">
+            <span style="color:var(--text-muted)">Updated</span>
+            <strong>{{ notice.updated_at.strftime('%d %b %Y') }}</strong>
+          </div>
+          {% endif %}
+          <div style="display:flex;justify-content:space-between">
+            <span style="color:var(--text-muted)">Expiry</span>
+            <strong>{{ notice.expiry_date.strftime('%d %b %Y') if notice.expiry_date else 'No expiry' }}</strong>
+          </div>
+          <div style="display:flex;justify-content:space-between">
+            <span style="color:var(--text-muted)">Views</span>
+            <strong>{{ notice.views }}</strong>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Actions -->
+    <div class="card-custom">
+      <div class="card-body-custom">
+        <h6 style="font-weight:700;font-size:14px;margin-bottom:12px">Actions</h6>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <a href="{{ url_for('export_pdf', nid=notice.id) }}" class="btn-outline-custom">
+            <i class="bi bi-file-earmark-pdf text-danger"></i> Export as PDF
+          </a>
+          {% if session.role in ['admin','faculty'] %}
+          {% if session.role == 'admin' or notice.user_id == session.user_id %}
+          <a href="{{ url_for('edit_notice', nid=notice.id) }}" class="btn-outline-custom">
+            <i class="bi bi-pencil"></i> Edit Notice
+          </a>
+          <form method="POST" action="{{ url_for('delete_notice', nid=notice.id) }}" onsubmit="return confirm('Delete this notice permanently?')">
+            <button class="btn-outline-custom btn-danger-custom w-100">
+              <i class="bi bi-trash"></i> Delete Notice
+            </button>
+          </form>
+          {% endif %}
+          {% if session.role == 'admin' %}
+          <form method="POST" action="{{ url_for('archive_notice', nid=notice.id) }}" onsubmit="return confirm('Archive this notice?')">
+            <button class="btn-outline-custom w-100">
+              <i class="bi bi-archive"></i> Archive Notice
+            </button>
+          </form>
+          {% endif %}
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+async function summarize() {
+  const btn = document.getElementById('summarizeBtn');
+  const box = document.getElementById('aiSummary');
+  btn.disabled = true;
+  btn.innerHTML = '<i class="bi bi-hourglass-split spinner"></i> Generating…';
+  const text = `{{ notice.title }}\n\n{{ notice.description | replace('"',"'") | replace('\n',' ') }}`;
+  try {
+    const res  = await fetch('/api/summarize', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ text })
+    });
+    const data = await res.json();
+    if (data.summary) {
+      box.innerHTML = `<div style="white-space:pre-line">${data.summary}</div>`;
+    } else {
+      box.innerHTML = `<span style="color:var(--danger)">Could not generate summary.</span>`;
+    }
+  } catch {
+    box.innerHTML = `<span style="color:var(--danger)">Error connecting to AI service.</span>`;
+  }
+}
+</script>
+{% endblock %}

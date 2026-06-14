@@ -1,0 +1,157 @@
+{% extends "base.html" %}
+{% block title %}Notices{% endblock %}
+{% block page_title %}Notice Board{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <div class="page-header-title">All Notices</div>
+    <div class="page-header-sub">{{ notices|length }} notice(s) found</div>
+  </div>
+  {% if session.role in ['admin','faculty'] %}
+  <a href="{{ url_for('add_notice') }}" class="btn-primary-custom">
+    <i class="bi bi-plus-lg"></i> Post Notice
+  </a>
+  {% endif %}
+</div>
+
+<!-- Filter Bar -->
+<div class="card-custom mb-4">
+  <div class="card-body-custom">
+    <form method="GET" action="{{ url_for('notices') }}" id="filterForm">
+      <div class="row g-2 align-items-end">
+        <div class="col-12 col-md-4">
+          <label class="form-label-custom">Search</label>
+          <div style="position:relative">
+            <i class="bi bi-search" style="position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--text-muted)"></i>
+            <input type="text" name="q" value="{{ q }}" class="form-control-custom" style="padding-left:32px" placeholder="Title or description…">
+          </div>
+        </div>
+        <div class="col-6 col-md-2">
+          <label class="form-label-custom">Category</label>
+          <select name="category" class="form-control-custom form-select-custom">
+            <option value="">All Categories</option>
+            {% for c in categories %}
+            <option value="{{ c.id }}" {% if sel_cat == c.id|string %}selected{% endif %}>{{ c.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="col-6 col-md-2">
+          <label class="form-label-custom">Priority</label>
+          <select name="priority" class="form-control-custom form-select-custom">
+            <option value="">All</option>
+            <option value="urgent" {% if sel_priority=='urgent' %}selected{% endif %}>Urgent</option>
+            <option value="high"   {% if sel_priority=='high'   %}selected{% endif %}>High</option>
+            <option value="normal" {% if sel_priority=='normal' %}selected{% endif %}>Normal</option>
+            <option value="low"    {% if sel_priority=='low'    %}selected{% endif %}>Low</option>
+          </select>
+        </div>
+        <div class="col-6 col-md-2">
+          <label class="form-label-custom">From</label>
+          <input type="date" name="date_from" class="form-control-custom">
+        </div>
+        <div class="col-6 col-md-2">
+          <label class="form-label-custom">&nbsp;</label>
+          <div style="display:flex;gap:8px">
+            <button type="submit" class="btn-primary-custom flex-1" style="flex:1">
+              <i class="bi bi-funnel"></i> Filter
+            </button>
+            <a href="{{ url_for('notices') }}" class="btn-outline-custom">
+              <i class="bi bi-x"></i>
+            </a>
+          </div>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Category Quick Filters -->
+<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px">
+  <a href="{{ url_for('notices') }}" class="btn-outline-custom {% if not sel_cat %}active{% endif %}"
+     style="{% if not sel_cat %}background:var(--primary);color:#fff;border-color:var(--primary){% endif %}">
+    All
+  </a>
+  {% for c in categories %}
+  <a href="{{ url_for('notices', category=c.id) }}"
+     class="btn-outline-custom"
+     style="{% if sel_cat==c.id|string %}background:var(--primary);color:#fff;border-color:var(--primary){% endif %}">
+    <i class="bi {{ c.icon }}"></i> {{ c.name }}
+  </a>
+  {% endfor %}
+</div>
+
+<!-- Notices Grid -->
+{% if notices %}
+<div id="noticeGrid">
+  {% for n in notices %}
+  <div class="notice-card priority-{{ n.priority }} mb-3" onclick="location.href='{{ url_for('notice_detail', nid=n.id) }}'">
+    <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px">
+      <div style="flex:1;min-width:0">
+        <div class="notice-title">{{ n.title }}</div>
+        <div class="notice-desc">{{ n.description }}</div>
+        <div class="notice-meta">
+          <span><i class="bi bi-tag"></i> {{ n.cat_name }}</span>
+          <span><i class="bi bi-person"></i> {{ n.author_name }}</span>
+          <span><i class="bi bi-calendar"></i> {{ n.created_at.strftime('%d %b %Y') if n.created_at else '–' }}</span>
+          {% if n.expiry_date %}
+          <span {% if n.expiry_date < now.date() %}style="color:var(--danger)"{% endif %}>
+            <i class="bi bi-hourglass"></i>
+            Expires {{ n.expiry_date.strftime('%d %b %Y') }}
+          </span>
+          {% endif %}
+          <span><i class="bi bi-eye"></i> {{ n.views }}</span>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;flex-shrink:0">
+        <span class="priority-badge pb-{{ n.priority }}">{{ n.priority }}</span>
+        {% if n.attachment %}
+        <span style="font-size:11px;color:var(--text-muted)">
+          <i class="bi bi-paperclip"></i> Attached
+        </span>
+        {% endif %}
+      </div>
+    </div>
+
+    {% if session.role in ['admin','faculty'] %}
+    <div style="display:flex;gap:8px;margin-top:14px;padding-top:12px;border-top:1px solid var(--border)" onclick="event.stopPropagation()">
+      <a href="{{ url_for('notice_detail', nid=n.id) }}" class="btn-outline-custom" style="padding:5px 12px;font-size:12px">
+        <i class="bi bi-eye"></i> View
+      </a>
+      {% if session.role == 'admin' or n.user_id == session.user_id %}
+      <a href="{{ url_for('edit_notice', nid=n.id) }}" class="btn-outline-custom" style="padding:5px 12px;font-size:12px">
+        <i class="bi bi-pencil"></i> Edit
+      </a>
+      {% if session.role == 'admin' %}
+      <form method="POST" action="{{ url_for('archive_notice', nid=n.id) }}" style="display:inline" onsubmit="return confirm('Archive this notice?')">
+        <button class="btn-outline-custom" style="padding:5px 12px;font-size:12px">
+          <i class="bi bi-archive"></i>
+        </button>
+      </form>
+      {% endif %}
+      <form method="POST" action="{{ url_for('delete_notice', nid=n.id) }}" style="display:inline" onsubmit="return confirm('Delete this notice?')">
+        <button class="btn-outline-custom btn-danger-custom" style="padding:5px 12px;font-size:12px">
+          <i class="bi bi-trash"></i>
+        </button>
+      </form>
+      {% endif %}
+    </div>
+    {% endif %}
+  </div>
+  {% endfor %}
+</div>
+{% else %}
+<div class="card-custom">
+  <div class="card-body-custom text-center py-5">
+    <i class="bi bi-inbox" style="font-size:56px;color:var(--text-muted);opacity:.4"></i>
+    <p style="margin-top:14px;font-size:15px;font-weight:600">No notices found</p>
+    <p style="color:var(--text-muted);font-size:13px">Try adjusting your filters or search query.</p>
+    {% if session.role in ['admin','faculty'] %}
+    <a href="{{ url_for('add_notice') }}" class="btn-primary-custom mt-3">
+      <i class="bi bi-plus-lg"></i> Post first notice
+    </a>
+    {% endif %}
+  </div>
+</div>
+{% endif %}
+{% endblock %}
