@@ -6,7 +6,8 @@ Flask Backend — v5 (SocketIO + Persistent Sessions + Push + Railway MySQL)
 import os, json, qrcode, io, base64
 from datetime import datetime, timedelta
 from functools import wraps
-
+import eventlet
+eventlet.monkey_patch()
 from dotenv import load_dotenv
 load_dotenv()
 
